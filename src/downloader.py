@@ -103,7 +103,7 @@ class Downloader:
                     band_filtered = ee.List([feature.get(band), -9999]).reduce(ee.Reducer.firstNonNull())
                     feature_dict[band] = band_filtered
 
-                return feature.set(di)
+                return feature.set(feature_dict)
 
             return image.select(bands).reduceRegions(
                 collection=points_fc,
