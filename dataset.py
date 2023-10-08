@@ -31,6 +31,7 @@ class Dataset:
         for country in self._country_settings.values():
             mask = filter_by_bounds(self._df, country[BOUNDS])
             # A convenient column to distinguish between countries
+            # Please see https://github.com/pandas-dev/pandas/issues/55025 if you have a warning from pandas here.
             self._df.loc[mask, COUNTRY] = country[COUNTRY_NAME]
 
             self._countries.append(Dataset_country(self, country))
@@ -275,7 +276,7 @@ class Dataset_training_ready():
         else:
             df = ds._df.copy().set_index(ID)
 
-        df_optical = pd.DataFrame(columns=[TIMESTAMP] + bands)
+        df_optical = pd.DataFrame()
 
         if only_country is not None:
             for country in ds.countries:

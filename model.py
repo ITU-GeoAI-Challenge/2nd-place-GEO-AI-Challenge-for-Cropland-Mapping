@@ -33,6 +33,8 @@ class Model:
                 pred, ids = model.predict_on_test()
                 PREDS += list(pred)
                 IDS += list(ids)
+            PREDS = np.array(PREDS)
+            IDS = np.array(IDS)
             return PREDS, IDS
         
         elif self.model is not None:
