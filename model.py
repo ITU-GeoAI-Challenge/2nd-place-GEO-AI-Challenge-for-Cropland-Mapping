@@ -4,6 +4,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import KFold, ShuffleSplit
 
 class Model:
     def __init__(self, model_builder, ds, seed):
@@ -43,13 +44,15 @@ class Model:
         else:
             print('No model trained, cannot predict.')
 
-    def train_with_cv_one_rf(self, n_splits=5, debug_level=1):
-        
+    def train_with_cv_one_rf(self, n_splits=5, debug_level=1, train_size=None):
         X_train = self.ds.X_train
         Y_train = self.ds.Y_train
         IDs = self.ds.ids
 
-        kf = KFold(n_splits=n_splits, shuffle=True, random_state=SEED)
+        if train_size is not None:
+            splits = ShuffleSplit(n_splits=n_splits, train_size=train_size, random_state=self.seed)
+        else:
+            splits = KFold(n_splits=n_splits, shuffle=True, random_state=self.seed)
 
         accs = []
         accs_class_0 = []
@@ -58,7 +61,7 @@ class Model:
         idxs = []
         preds = []
 
-        for i, (train_index, test_index) in enumerate(kf.split(X_train)):
+        for i, (train_index, test_index) in enumerate(splits.split(X_train)):
             model = self.model_builder(self.seed)
 
             x_train = X_train.iloc[train_index]
@@ -87,7 +90,7 @@ class Model:
 
         return acc, acc_class_0, acc_class_1, idxs, preds
 
-    def train_with_cv_one_rf_per_country(self, n_splits=3, debug_level=1):
+    def train_with_cv_one_rf_per_country(self, n_splits=3, debug_level=1, train_size=None):
         accs = []
         accs_class_0 = []
         accs_class_1 = []
@@ -98,7 +101,7 @@ class Model:
                 print(f'Training on {country.name}...')
             model = Model(self.model_builder, country, self.seed)
             
-            acc, acc_class_0, acc_class_1, pred, ids = model.train_with_cv_one_rf(n_splits, 0)
+            acc, acc_class_0, acc_class_1, pred, ids = model.train_with_cv_one_rf(debug_level=0, train_size=train_size, n_splits=n_splits)
             
             preds += list(pred)
             idxs += list(ids)

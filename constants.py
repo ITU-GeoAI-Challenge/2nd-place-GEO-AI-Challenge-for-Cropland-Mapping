@@ -26,6 +26,7 @@ BOUNDS = 'Bounds'
 
 # GEE Collection names
 COLLECTION_NAME = 'COPERNICUS/S2_SR_HARMONIZED'
+PROJECT_NAME = None
 
 # visualization related
 C_CLASS_1 = 'green'
