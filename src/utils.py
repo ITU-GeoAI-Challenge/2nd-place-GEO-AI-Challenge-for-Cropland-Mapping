@@ -4,7 +4,7 @@ import folium
 import numpy as np
 import pandas as pd
 
-from src.constants import LON, LAT, TIMESTAMP, ID, COUNTRY, RADIUS_CIRCLES, C_CRICLES, WEIGHT_CIRCLES
+from src.constants import LON, LAT, TIMESTAMP, ID, COUNTRY, RADIUS_CIRCLES, C_CRICLES, WEIGHT_CIRCLES, B8, B4, NDVI
 
 ############################### 
 ##### Filtering functions #####
