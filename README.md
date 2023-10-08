@@ -3,9 +3,9 @@
 We provide two jupyter notebooks:
 - `full_study.ipynb` : the full study. We recommend this notebook for people interested in the decisions that lead to the final submission. **We strongly recommend reading section 6 where results are summarized and strengths, weaknesses and possible improvements are discussed.** This notebook use the extra python files in `src/` and the code is not very neat as it was used in the exploratory phase. This study consist of 6 parts:
     - 1 - Downloading the data from GEE
-    - 2 - Data preprocessing
-    - 3 - Study on the impact of timerange
-    - 4 - Study on the impact of Sentinel-2 radiometric bands
+    - 2 - Data preprocessing to obtain aligned timeseries of same lengths
+    - 3 - Study of different time spans (length) and periods (start date)
+    - 4 - Study of different Sentinel-2 radiometric bands
     - 5 - Reproduction of the submitted solution
     - 6 - Discussion on strengths, weaknesses and possible improvements
 - `simple_reproduction.ipynb` : a simplified version only reproducing the submitted solution. This notebook is self-contained and does not require any extra file. The code is more streamlined and probably easier to integrate in a production pipeline.
