@@ -2,8 +2,8 @@ import ee
 import time
 import pandas as pd
 
-from constants import LON, LAT, TIMESTAMP, ID, COUNTRY, RADIUS_CIRCLES, C_CRICLES, WEIGHT_CIRCLES, TS_ID
-from utils import fc_from_points, get_center, get_bounds, filter_by_bounds, filter_by_dates, filter_by_country, base_folium, str_coord, fc_to_dict, addNDVI
+from src.constants import LON, LAT, TIMESTAMP, ID, COUNTRY, RADIUS_CIRCLES, C_CRICLES, WEIGHT_CIRCLES, TS_ID
+from src.utils import fc_from_points, get_center, get_bounds, filter_by_bounds, filter_by_dates, filter_by_country, base_folium, str_coord, fc_to_dict, addNDVI
 
 class Downloader:
     """

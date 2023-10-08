@@ -133,7 +133,7 @@ class Model:
                 print(f'Training on {country.name}...')
             model = Model(self.model_builder, country, self.seed)
             
-            acc, acc_class_0, acc_class_1, pred, ids = model.train_with_cv_one_rf(debug_level=0, train_size=train_size, n_splits=n_splits)
+            acc, acc_class_0, acc_class_1, pred, ids = model.train_with_cv_one_rf(debug_level=0, n_splits=n_splits)
             
             preds += list(pred)
             idxs += list(ids)

@@ -1,17 +1,17 @@
 import pandas as pd
 
-from constants import (
+from src.constants import (
     ID, LON, LAT, TIMESTAMP, TARGET, IS_TRAIN, 
     COUNTRY, COUNTRY_NAME, BOUNDS, START_DATE, END_DATE,
     COLLECTION_NAME, ALL_BANDS, SCL, NDVI, B2, B3, B4, B8, 
 )
 
-from utils import (
+from src.utils import (
     get_bounds, get_center, str_coord, filter_by_bounds, filter_by_country,
     filter_by_dates, interpolate_ts
 )
 
-from downloader import Downloader
+from src.downloader import Downloader
 
 class Dataset:
     """
