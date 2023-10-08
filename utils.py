@@ -126,34 +126,15 @@ def interpolate_ts(df, bands, sampling_rate=5, start_date=None, end_date=None):
     df[TIMESTAMP] = pd.to_datetime(df[TIMESTAMP]).dt.normalize()
     df = df.drop_duplicates(subset=[ID, TIMESTAMP])
 
-    # n_days = (end_date - start_date).days + 1
-    # n_timeseries = len(np.unique(df[ID]))
-    # n_bands = len(bands)
-
     groups = df.groupby(ID)
     XX = groups.apply(
         lambda x: x.set_index(TIMESTAMP)[bands].reindex(date_range).values
-    ) #.interpolate(method='linear', limit_direction='both')
+    )
     IDs = groups[ID].first().values
 
     XX = np.stack(XX.values).astype('float32')
-    # print(XX.shape)
-    # print(XX[0, :, :])
     XX = interpolate_nans_3D(XX)
     XX = XX[:, ::sampling_rate, :]
-
-    # XX = np.empty((n_timeseries, n_days, n_bands))
-    # XX[:] = np.nan
-    # IDs = []
-    # for i, ts_id in enumerate(np.unique(df[ID])):
-    #     ts = df.loc[df[ID] == ts_id]
-    #     mask = (pd.to_datetime(ts[TIMESTAMP]) - start_date).dt.days.values
-    #     x = np.array(ts[bands].values)
-    #     XX[i, mask, :] = x
-    #     IDs.append(ts_id)
-
-    # XX = interpolate_nans_3D(XX)
-    # XX = XX[:, ::sampling_rate, :]
 
     return XX, IDs
 
