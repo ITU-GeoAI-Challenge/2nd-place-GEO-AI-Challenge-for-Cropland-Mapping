@@ -19,8 +19,8 @@ There are two ways to run the notebooks:
 ### Using Google Colab
 
 See Files description below for more details on the notebooks.
-- [full_study.ipynb](to fill)
-- [simple_reproduction.ipynb](to fill)
+- [full_study.ipynb](https://colab.research.google.com/drive/1VNLHFsI4rpmS75hzLY9INsr7lHKNs-wB?usp=sharing)
+- [simple_reproduction.ipynb](https://colab.research.google.com/drive/1aMbBlbrlwZMYgKggQ2BYovC9_6kvB-kR?usp=sharing)
 
 ### Using a local python environment
 
