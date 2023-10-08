@@ -17,6 +17,11 @@ class Dataset:
     """
     This class is a wrapper around a pandas Dataframe with a simple interface to access
     train, test and train_test dataframes as well as by country subdatasets.
+
+    Internally, the class manage :
+    - self._df : the train and test data with targets, lon and lat loaded from csv files
+    - self._optical_df : the optical data loaded from GEE
+    - self._countries : a list of subsets, each representing the data of a single country
     """
     def __init__(self, df, name, country_settings, optical_data=None, debug_level=2):
         self._df = df
@@ -39,19 +44,29 @@ class Dataset:
         self.display_info()
 
     def from_files(train_file, test_file, name, country_settings, debug_level=2):
+        """
+        Create a Dataset object from challenge train and test csv files.
+        """
         train = pd.read_csv(train_file)
         test = pd.read_csv(test_file)
 
         # A single pandas Dataframe for test and train with Target at null for test
         df = pd.concat([train, test])
+
         # A convenient column to distinguish between train and test
         df[IS_TRAIN] = df[TARGET].notnull()
 
         debug_lvl = debug_level
         ds = Dataset(df, name, country_settings, debug_level=debug_lvl)
+        
         return ds
 
     def load_all_optical_data(self, project_name, debug=False):
+        """
+        Load all optical data from GEE for the Dataset.
+        If data is already available locally, it will be loaded from there.
+        Please see Download class for more information.
+        """
         downloader = Downloader(project_name, COLLECTION_NAME)
         self._optical_df = downloader.load(self, 
             ALL_BANDS, passed = pd.Timedelta(days=365), future = pd.Timedelta(days=365)
@@ -63,22 +78,37 @@ class Dataset:
 
     @property
     def train(self, country=None):
+        """
+        Dynamically filter the dataframe to return only the train subset.
+        """
         return self._df.loc[self._df[IS_TRAIN]]
 
     @property
     def test(self, country=None):
+        """
+        Dynamically filter the dataframe to return only the test subset.
+        """
         return self._df.loc[~self._df[IS_TRAIN]]
 
     @property
     def train_test(self, country=None):
+        """
+        Return the full dataframe.
+        """
         return self._df
 
     @property
     def center(self, country=None):
+        """
+        Return the geographical center of the dataframe.
+        """
         return get_center(self.train_test)
 
     @property
     def bounds(self, country=None):
+        """
+        Return the geographical bounds of the dataframe.
+        """
         return get_bounds(self.train_test)
 
     @property
@@ -96,6 +126,10 @@ class Dataset:
         )
 
     def display_info(self):
+        """
+        Display information about the dataset and by country subdatasets.
+        """
+
         if self._debug_level > 0:
             print('#'*40)
             print('Dataset info:')
@@ -110,6 +144,7 @@ class Dataset:
             print(f'        min : {str_coord(bounds[0])}')
             print(f'        max : {str_coord(bounds[1])}')
 
+            # Head and info of the train and test dataframe subsets
             for subset, subset_name in zip([self.train, self.test], ['Train', 'Test']):
                 print(f'    {subset_name} head:')
                 display(subset.head())
@@ -117,6 +152,7 @@ class Dataset:
                 if self._debug_level > 1:
                     display(subset.info())
 
+            # Head and info of the optical dataframe if available
             if hasattr(self, '_optical_df'):
                 print('#'*40)
                 print('Optical dataset info:')
@@ -128,6 +164,7 @@ class Dataset:
                     display(self._optical_df.info())
 
             print('#'*40)
+            # Per country info
             for country in self.countries:
                 print(f'Country {country.name} info:')
                 print('    Start date:', country.start_date)
@@ -145,10 +182,16 @@ class Dataset:
             self._check_for_duplicates()
 
     def _check_for_duplicates(self):
+        """
+        This method check for rows in the dataframe with the same (lon, lat) pair.
+        """
         print(f'{self._df[[LON, LAT]].duplicated(keep=False).sum()} duplicates found in dataset :')
         display(self._df.loc[self._df[[LON, LAT]].duplicated(keep=False), [ID, LON, LAT, TARGET]].sort_values(by=[LON, LAT]))
 
     def _check_match_between_optical_and_train_test(self):
+        """
+        This method check that the optical dataframe matches the normal df in terms of IDs, lon and lat.
+        """
         for idd, lon, lat in zip(self.train_test[ID], self.train_test[LON], self.train_test[LAT]):
             tmp = self._optical_df.loc[idd == self._optical_df[ID]]
             
@@ -179,35 +222,56 @@ class Dataset_country(Dataset):
 
     @property
     def train(self):
+        """
+        Dynamically filter the main dataframe to return only the train subset of the country.
+        """
         mask = filter_by_country(self._df, self)
         return self._df.loc[self._df[IS_TRAIN] & mask]
 
     @property
     def test(self):
+        """
+        Dynamically filter the main dataframe to return only the test subset of the country.
+        """
         mask = filter_by_country(self._df, self)
         return self._df.loc[~self._df[IS_TRAIN] & mask]
 
     @property
     def train_test(self):
+        """
+        Dynamically filter the main dataframe to return only the subset of the country.
+        """
         mask = filter_by_country(self._df, self)
         return self._df.loc[mask]
 
     @property
     def center(self):
+        """
+        Return the geographical center of the country.
+        """
         mask = filter_by_country(self.train_test, self)
         return get_center(self.train_test[mask])
 
     @property
     def bounds(self):
+        """
+        Return the geographical bounds of the country.
+        """
         mask = filter_by_country(self.train_test, self)
         return get_bounds(self.train_test[mask])
 
     @property
     def ids(self):
+        """
+        Return the IDs of the datapoints in the country.
+        """
         return self.train_test[ID]
 
     @property
     def optical_df(self):
+        """ 
+        Return the optical dataframe filtered to only contain the data of the country.
+        """
         mask = self._ds._optical_df[ID].isin(self.ids)
         return self._ds._optical_df.loc[mask]
 
@@ -219,14 +283,12 @@ class Dataset_country(Dataset):
     def optical_end_date(self):
         return self.optical_df[TIMESTAMP].max()
 
-    def n_timesteps_average(self):
-        n_timesteps = []
-        for idd in self.ids:
-            ts_df = self.optical_df.loc[self.optical_df[ID] == idd]
-            n_timesteps.append(ts_df.shape[0])
-        return np.mean(n_timesteps)
-
 class Dataset_training_ready():
+    """
+    This class is a wrapper around Dataset that expose a simple interface to access X_train, Y_train, and X_test.
+    Most importantly, it handles the interpolation, redindexing and resampling of the optical data into
+    fixed length timeseries ready for use in a scikit-learn model.
+    """
     TABULAR = 'tabular'
     TIMESERIES = 'timeseries'
 
@@ -251,24 +313,11 @@ class Dataset_training_ready():
         if debug_level > 1:
             display(self._df_optical.info())
 
-    def get_baseline_data_from(ds, project_name):
-        ds.load_all_optical_data(project_name)
-
-        bands = [B2, B3, B4, B8, NDVI]
-
-        df = ds._df.copy().set_index(ID)
-
-        df_optical = pd.DataFrame(columns=bands)
-        for country in ds.countries:
-            optical = filter_by_dates(country.optical_df, country.start_date, country.end_date)
-            optical = optical[[ID] + bands]
-            optical = optical.groupby(ID).mean()
-
-            df_optical = pd.concat([df_optical, optical])
-
-        return Dataset_training_ready(df, df_optical, bands, Dataset_training_ready.TABULAR)
-
     def get_ts_data_from(ds, bands, project_name, only_country=None, start_date=None, end_date=None, country_settings=None):
+        """
+        Given a Dataset and other parameters, this function will create a Dataset_training_ready object 
+        with X_train, Y_train, X_test ready for use in a scikit-learn model.
+        """
         ds.load_all_optical_data(project_name)
 
         if only_country is not None:
@@ -312,6 +361,9 @@ class Dataset_training_ready():
 
     @property
     def X_train(self):
+        """
+        Dynamically reindex, interpolate and resample the optical train data into as (n_samples, n_timesteps*n_bands) array.
+        """
         if self._data_type == Dataset_training_ready.TABULAR:
             return self._df_optical.loc[self._df[IS_TRAIN], self.bands].sort_index()
         elif self._data_type == Dataset_training_ready.TIMESERIES:
@@ -323,10 +375,16 @@ class Dataset_training_ready():
 
     @property
     def Y_train(self):
+        """
+        Return the target values of the train subset, matching the order of X_train.
+        """
         return self._df.loc[self._df[IS_TRAIN], TARGET].sort_index().astype('uint8')
 
     @property
     def X_test(self):
+        """
+        Dynamically reindex, interpolate and resample the optical test data into as (n_samples, n_timesteps*n_bands) array.
+        """
         if self._data_type == Dataset_training_ready.TABULAR:
             return self._df_optical.loc[~self._df[IS_TRAIN], self.bands].sort_index()
         elif self._data_type == Dataset_training_ready.TIMESERIES:
@@ -340,7 +398,28 @@ class Dataset_training_ready():
     def ids(self):
         return pd.Series(self._df.index)
 
+    def get_baseline_data_from(ds, project_name):
+        ds.load_all_optical_data(project_name)
+
+        bands = [B2, B3, B4, B8, NDVI]
+
+        df = ds._df.copy().set_index(ID)
+
+        df_optical = pd.DataFrame(columns=bands)
+        for country in ds.countries:
+            optical = filter_by_dates(country.optical_df, country.start_date, country.end_date)
+            optical = optical[[ID] + bands]
+            optical = optical.groupby(ID).mean()
+
+            df_optical = pd.concat([df_optical, optical])
+
+        return Dataset_training_ready(df, df_optical, bands, Dataset_training_ready.TABULAR)
+
 class Dataset_training_ready_country(Dataset_training_ready):
+    """
+    Dataset has a list of Dataset_country, Dataset_training_ready has a list of Dataset_training_ready_country.
+    This class is a subdataset of a Dataset_training_ready object filtered by country
+    """
     def __init__(self, ds, country_name):
         self._ds = ds
         self.country_name = country_name
@@ -350,6 +429,9 @@ class Dataset_training_ready_country(Dataset_training_ready):
 
     @property
     def X_train(self):
+        """
+        Dynamically reindex, interpolate and resample the country optical train data into as (n_samples, n_timesteps*n_bands) array.
+        """
         if self._ds._data_type == Dataset_training_ready.TABULAR:
             return self._ds.X_train.loc[self.country_mask()]
         elif self._ds._data_type == Dataset_training_ready.TIMESERIES:
@@ -361,10 +443,16 @@ class Dataset_training_ready_country(Dataset_training_ready):
 
     @property
     def Y_train(self):
+        """
+        Return the target values of the country train subset, matching the order of X_train.
+        """
         return self._ds.Y_train.loc[self.country_mask()].astype('uint8')
 
     @property
     def X_test(self):
+        """
+        Dynamically reindex, interpolate and resample the country optical test data into as (n_samples, n_timesteps*n_bands) array.
+        """
         if self._ds._data_type == Dataset_training_ready.TABULAR:
             return self._ds.X_test.loc[self.country_mask()]
         elif self._ds._data_type == Dataset_training_ready.TIMESERIES:
