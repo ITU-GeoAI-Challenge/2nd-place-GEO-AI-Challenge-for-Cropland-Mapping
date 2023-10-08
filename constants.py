@@ -1,4 +1,7 @@
-# Datafram column names
+##################################
+##### Dataframe column names #####
+##################################
+
 TS_ID = 'TS_ID'
 ID = 'ID'
 TARGET = 'Target'
@@ -15,6 +18,10 @@ NDVI = 'NDVI'
 ALL_BANDS = [B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12, SCL, NDVI]
 BEST_BANDS = [B3, B4, B8, LON, LAT, NDVI]
 
+######################################
+##### Country settings dict KEYS #####
+######################################
+
 SUDAN = 'Sudan'
 AFGHANISTAN = 'Afghanistan'
 IRAN = 'Iran'
@@ -24,11 +31,17 @@ START_DATE = 'Start Date'
 END_DATE = 'End Date'
 BOUNDS = 'Bounds'
 
-# GEE Collection names
+#######################
+##### GEE related #####
+#######################
+
 COLLECTION_NAME = 'COPERNICUS/S2_SR_HARMONIZED'
 PROJECT_NAME = None
 
-# visualization related
+#################################
+##### Visualization related #####
+#################################
+
 C_CLASS_1 = 'green'
 C_CLASS_0 = 'red'
 C_TEST = 'blue'
