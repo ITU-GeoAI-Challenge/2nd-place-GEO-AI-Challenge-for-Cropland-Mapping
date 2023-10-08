@@ -4,10 +4,27 @@ from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import KFold, ShuffleSplit
+from sklearn.model_selection import KFold
 
 class Model:
+    """
+    The Model class expose convenience methods to train and predict on a dataset.
+    Among other things, it handles :
+    - training of one model per country.
+    - training with cross validation.
+    - training on full dataset + prediction on test set.
+    """
     def __init__(self, model_builder, ds, seed):
+        """
+        model_builder : function
+            A function that returns a sklearn model.
+    
+        ds : Dataset
+            A Dataset on which optical data is already loaded.
+
+        seed : int
+            The seed to use for reproducibility.
+        """
         self.model_builder = model_builder
         self.ds = ds
         self.model = None
@@ -22,12 +39,18 @@ class Model:
     def train_on_full_dataset_one_per_country(self):
         models = []
         for country in self.ds.countries:
-            model = Model(self.model_builder, country, self.seed)
+            # Create one submodel per country
+            model = Model(self.model_builder, country, self.seed) 
             model.train_on_full_dataset()
             models.append(model)
         self.models = models
 
     def predict_on_test(self):
+        """
+        Predict an already fitted model on the test set.
+        Return the predictions and the IDs of the points.
+        """
+        # If there are submodels, predict on each of them and concatenate the results
         if self.models is not None:
             PREDS, IDS = [], []
             for model in self.models:
@@ -38,21 +61,24 @@ class Model:
             IDS = np.array(IDS)
             return PREDS, IDS
         
+        # If there is a single model, predict on it
         elif self.model is not None:
             return self.model.predict(self.ds.X_test), self.ds.X_test.index
         
         else:
             print('No model trained, cannot predict.')
 
-    def train_with_cv_one_rf(self, n_splits=5, debug_level=1, train_size=None):
+    def train_with_cv_one_rf(self, n_splits=5, debug_level=1):
+        """
+        Train a single model with cross validation.
+        This methods is used for experimentation, use train_on_full_dataset for final submission.
+        Returns the accuracy score, the accuracy score for class 0, the accuracy score for class 1, the IDs of the points and the predictions.
+        """
         X_train = self.ds.X_train
         Y_train = self.ds.Y_train
         IDs = self.ds.ids
 
-        if train_size is not None:
-            splits = ShuffleSplit(n_splits=n_splits, train_size=train_size, random_state=self.seed)
-        else:
-            splits = KFold(n_splits=n_splits, shuffle=True, random_state=self.seed)
+        splits = KFold(n_splits=n_splits, shuffle=True, random_state=self.seed)
 
         accs = []
         accs_class_0 = []
@@ -91,6 +117,12 @@ class Model:
         return acc, acc_class_0, acc_class_1, idxs, preds
 
     def train_with_cv_one_rf_per_country(self, n_splits=3, debug_level=1, train_size=None):
+        """
+        Train one model per country with cross validation.
+        This methods is used for experimentation, use train_on_full_dataset_one_per_country for final submission.
+        Returns the accuracy score, the accuracy score for class 0, the accuracy score for class 1, the IDs of the points and the predictions.
+        """
+
         accs = []
         accs_class_0 = []
         accs_class_1 = []
@@ -120,16 +152,26 @@ class Model:
 
         return acc, acc_class_0, acc_class_1, idxs, preds
 
+# Model builders
 def rf_builder(seed):
+    """
+    A basic random forest builder (100 trees)
+    """
     return RandomForestClassifier(random_state = seed)
 
 def rf_builder_big(seed):
+    """
+    A wide random forest builder (500 trees)
+    """
     return RandomForestClassifier(
         random_state = seed, 
         n_estimators=500, 
     )
 
 def rf_builder_shallow(seed):
+    """
+    A shallow random forest builder (max_depth=10, 100 trees)
+    """
     return RandomForestClassifier(
         random_state = seed, 
         n_estimators=100, 
@@ -137,13 +179,14 @@ def rf_builder_shallow(seed):
     )
 
 def svm_builder(seed):
+    """
+    A basic SVM builder
+    """
     return SVC(random_state = seed)
 
-def knn_builder_3():
-    return KNeighborsClassifier(n_neighbors=3)
+def knn_builder_n(n):
+    return KNeighborsClassifier(n_neighbors=n)
 
-def knn_builder_5():
-    return KNeighborsClassifier(n_neighbors=5)
-
-def knn_builder_10():
-    return KNeighborsClassifier(n_neighbors=10)
+knn_builder_3 = knn_builder_n(3)
+knn_builder_5 = knn_builder_n(5)
+knn_builder_10 = knn_builder_n(10)
