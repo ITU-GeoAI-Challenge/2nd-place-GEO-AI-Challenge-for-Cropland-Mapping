@@ -18,8 +18,8 @@ The solution is explained in details in `full_study.ipynb`.
 A summary is given below :
 - **Data**:
     - Sentinel-2 time series data is used
-    - The time series lengths and periods are optimized per country for with CV on the training data
-    - The choice of which Sentinel-2 radiometric bands to keep is optimized for with CV on the training data
+    - The time series lengths and periods are optimized per country with CV on the training data
+    - The choice of which Sentinel-2 radiometric bands to keep is optimized with CV on the training data
 - **Model**:
     - A simple shallow RandomForest per country (using python scikit-learn implementation).
 
