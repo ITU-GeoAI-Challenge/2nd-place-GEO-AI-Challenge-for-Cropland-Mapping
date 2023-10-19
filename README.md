@@ -1,5 +1,7 @@
 # GEO-AI Challenge for Crop Mapping by ITU - Antoine Saget's submission
 
+This repository present the 2nd place solution for the Zindi GEO-AI Challenge for Cropland Mapping by ITU that achieve a 0.943 accuracy on the private leaderboard.
+
 We provide two jupyter notebooks:
 - `full_study.ipynb` : the full study. We recommend this notebook for people interested in the decisions that lead to the final submission. **We strongly recommend reading section 6 where results are summarized and strengths, weaknesses and possible improvements are discussed.** This notebook use the extra python files in `src/` and the code is not very neat as it was used in the exploratory phase. This study consist of 6 parts:
     - 1 - Downloading the data from GEE
@@ -10,6 +12,17 @@ We provide two jupyter notebooks:
     - 6 - Discussion on strengths, weaknesses and possible improvements
 - `simple_reproduction.ipynb` : a simplified version only reproducing the submitted solution. This notebook is self-contained and does not require any extra file. The code is more streamlined and probably easier to integrate in a production pipeline.
 
+## Solution
+
+The solution is explained in details in `full_study.ipynb`.
+A summary is given below :
+- **Data**:
+    - Sentinel-2 time series data is used
+    - The time series lengths and periods are optimized per country for with CV on the training data
+    - The choice of which Sentinel-2 radiometric bands to keep is optimized for with CV on the training data
+- **Model**:
+    - A simple shallow RandomForest per country (using python scikit-learn implementation).
+
 ## Installation
 
 There are two ways to run the notebooks:
@@ -18,8 +31,8 @@ There are two ways to run the notebooks:
 
 ### Using Google Colab
 
-- [full_study.ipynb](https://colab.research.google.com/drive/1VNLHFsI4rpmS75hzLY9INsr7lHKNs-wB?usp=sharing)
-- [simple_reproduction.ipynb](https://colab.research.google.com/drive/1aMbBlbrlwZMYgKggQ2BYovC9_6kvB-kR?usp=sharing)
+- [full_study.ipynb](https://colab.research.google.com/drive/1VNLHFsI4rpmS75hzLY9INsr7lHKNs-wB?usp=sharing) (<15min runtime on Google Colab)
+- [simple_reproduction.ipynb](https://colab.research.google.com/drive/1aMbBlbrlwZMYgKggQ2BYovC9_6kvB-kR?usp=sharing) (<3min runtime on Google Colab)
 
 ### Using a local python environment
 
